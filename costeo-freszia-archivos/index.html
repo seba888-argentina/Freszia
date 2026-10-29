@@ -312,6 +312,7 @@
       <div><h2>Gustos Areco</h2><p>Los gustos del local de Areco por grupo. Tocá un nombre o una descripción para editarlo.</p></div>
       <span class="count" id="arecoCount">0</span>
     </div>
+    <div id="arecoTodos" style="margin-bottom:16px"></div>
     <div class="filtros">
       <input type="search" id="arecoBuscar" placeholder="Buscar gusto…" oninput="renderAreco()">
       <select id="arecoFiltro" onchange="renderAreco()">
@@ -898,9 +899,8 @@ function renderAreco(){
   $('#arecoCount').textContent=n+(n===1?' gusto':' gustos')+' · '+nm+' en mostrador · '+ne+' exclusivos';
   const filtrando=!!(($('#arecoBuscar').value||'').trim()||$('#arecoFiltro').value);
   const lista=arecoFiltrados();
-  if(filtrando&&!lista.length){wrap.innerHTML=`<div class="empty"><p class="hint" style="margin:0">Ningún gusto coincide con la búsqueda.</p></div>`;initSortAreco();return;}
   let i=0;
-  let h=n?`<div class="ar-todos"><div class="ar-todos-h"><b>📋 Todos los gustos</b><span class="hint" style="margin:0">Arrastrá un gusto para cambiarlo de lugar o de grupo. Tocá uno para ir a su fila. ★ = exclusivo Areco · los atenuados están en General.</span></div>`+
+  $('#arecoTodos').innerHTML=n?`<div class="ar-todos"><div class="ar-todos-h"><b>📋 Todos los gustos</b><span class="hint" style="margin:0">Arrastrá un gusto para cambiarlo de lugar o de grupo. Tocá uno para ir a su fila. ★ = exclusivo Areco · los atenuados están en General.</span></div>`+
     Object.entries(GRUPOS_ARECO).map(([gk,gt])=>{
       const gs=DB.areco.filter(g=>g.grupo===gk);
       return `<div class="ar-gt">${gt}<span class="n">${gs.length}</span></div><div class="ar-todos-grid ar-drop" data-g="${gk}">`+
@@ -908,6 +908,9 @@ function renderAreco(){
         `</div>`;
     }).join('')+
     `</div>`:'';
+  initSortAreco();
+  if(filtrando&&!lista.length){wrap.innerHTML=`<div class="empty"><p class="hint" style="margin:0">Ningún gusto coincide con la búsqueda.</p></div>`;return;}
+  let h='';
   Object.entries(GRUPOS_ARECO).forEach(([gk,gt])=>{
     const items=lista.filter(g=>g.grupo===gk);
     if(filtrando&&!items.length)return;
@@ -926,14 +929,13 @@ function renderAreco(){
     h+='</div>';
   });
   wrap.innerHTML=h;
-  initSortAreco();
 }
 /* ---------- arrastrar gustos en la grilla ---------- */
 let AR_SORT=[], AR_SOLTADO=0;
 function initSortAreco(){
   AR_SORT.forEach(s=>{try{s.destroy();}catch(e){}});AR_SORT=[];
   if(!window.Sortable)return;
-  document.querySelectorAll('#areco .ar-drop').forEach(el=>{
+  document.querySelectorAll('#arecoTodos .ar-drop').forEach(el=>{
     AR_SORT.push(Sortable.create(el,{group:'areco',animation:150,delay:180,delayOnTouchOnly:true,ghostClass:'ar-ghost',chosenClass:'ar-chosen',
       onStart(){busy++;},
       onEnd(){busy=Math.max(0,busy-1);AR_SOLTADO=Date.now();aplicarOrdenAreco();}}));
@@ -942,7 +944,7 @@ function initSortAreco(){
 function aplicarOrdenAreco(){
   const antes=DB.areco.map(g=>g.id+':'+g.grupo).join('|');
   const vistos=new Set(), nuevo=[];
-  document.querySelectorAll('#areco .ar-drop').forEach(c=>{
+  document.querySelectorAll('#arecoTodos .ar-drop').forEach(c=>{
     const gk=c.dataset.g;
     c.querySelectorAll('.ar-chip[data-id]').forEach(ch=>{
       const g=findAreco(ch.dataset.id);
