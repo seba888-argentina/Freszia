@@ -421,7 +421,7 @@ function setStatus(s,txt){
 function save(){
   if(!LOADED)return;
   dirty=true;setStatus('pending');
-  clearTimeout(saveTimer);saveTimer=setTimeout(flush,700);
+  clearTimeout(saveTimer);saveTimer=setTimeout(flush,2000);
 }
 async function flush(force){
   if(saving){clearTimeout(saveTimer);saveTimer=setTimeout(flush,400);return;}
@@ -468,7 +468,13 @@ function showApp(hayDatos){
 }
 window.addEventListener('beforeunload',e=>{if(dirty||saving||busy){e.preventDefault();e.returnValue='';}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){if(dirty)flush();}else pull();});
-setInterval(()=>{if(!document.hidden)pull();},10000);
+/* Revisa si hay cambios de otras personas cada 60 s, solo con la pestaña a la vista
+   y si alguien usó la página en los últimos 10 minutos (así no gasta cupo de Vercel con la pestaña olvidada). */
+let ULTIMA_ACT=Date.now();
+['pointerdown','keydown','scroll','touchstart'].forEach(ev=>window.addEventListener(ev,()=>{
+  const dormido=Date.now()-ULTIMA_ACT>10*60*1000;ULTIMA_ACT=Date.now();if(dormido)pull();
+},{passive:true}));
+setInterval(()=>{if(!document.hidden&&Date.now()-ULTIMA_ACT<10*60*1000)pull();},60000);
 
 /* ---------- costeo ---------- */
 function insumoCostoBase(i){return (i.precioCompra||0)/((i.cantCompra||1)||1);} // por unidadBase
