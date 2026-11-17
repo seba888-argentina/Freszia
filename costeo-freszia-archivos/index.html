@@ -390,6 +390,7 @@ function migrate(db){
     if(pl.receta==null)pl.receta='';
     if(pl.conservacion==null)pl.conservacion='';
     if(pl.tiempoMin==null)pl.tiempoMin=10;
+    if(pl.pesoGr==null)pl.pesoGr=0;
     if(!CATS[pl.categoria])pl.categoria=/cann?oli/i.test(pl.nombre||'')?'canolis':/waffle/i.test(pl.nombre||'')?'waffles':'postres';
     if(!ESTADOS_PLATO[pl.estado])pl.estado='carta';
     delete pl.markup;
@@ -568,6 +569,7 @@ function renderPlatos(){
       <div class="plate-head">
         <input style="font-size:15px;font-weight:700;border:none;padding:2px 0;max-width:100%" value="${escapeAttr(pl.nombre)}" onchange="setName('plato','${pl.id}',this.value)">
         <div class="plate-metrics">
+          <div class="metric"><div class="lbl">Peso total (g)</div><div class="val"><input type="number" step="any" class="mini" style="text-align:right" value="${pl.pesoGr||0}" onchange="setPeso('${pl.id}',this.value)"></div></div>
           <div class="metric"><div class="lbl">Insumos</div><div class="val" style="color:var(--warn)">${money(cIns)}</div></div>
           <div class="metric"><div class="lbl">Tiempo (min)</div><div class="val"><input type="number" class="mini" style="text-align:right" value="${pl.tiempoMin||0}" onchange="setTiempo('${pl.id}',this.value)"></div></div>
           <div class="metric"><div class="lbl">Mano de obra</div><div class="val" style="color:var(--warn)">${money(cMO)}</div></div>
@@ -656,6 +658,7 @@ function escapeAttr(s){return (s||'').replace(/"/g,'&quot;');}
 function escHTML(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function setValorHora(v){DB.valorHora=+v||0;renderAll();}
 function setTiempo(id,v){findPlato(id).tiempoMin=+v||0;renderAll();}
+function setPeso(id,v){findPlato(id).pesoGr=+v||0;save();}
 function setPlatoField(id,f,v){findPlato(id)[f]=v;save();}
 function setPlatoTag(id,f,v){const pl=findPlato(id);if(!pl)return;pl[f]=v;renderAll();}
 async function subirFoto(dataUrl){
@@ -747,7 +750,7 @@ function delComp(kind,id,idx){
 function setRend(id,v){findPrep(id).rendCant=+v||1;renderAll();}
 function setRendU(id,v){findPrep(id).rendUnidad=v;renderAll();}
 
-function addPlato(){$('#platFiltro').value='';DB.platos.unshift({id:uid(),nombre:'Nuevo plato',categoria:PLAT_CAT,estado:'proceso',tiempoMin:10,fotos:[],receta:'',conservacion:'',componentes:[]});renderAll();window.scrollTo(0,0);}
+function addPlato(){$('#platFiltro').value='';DB.platos.unshift({id:uid(),nombre:'Nuevo plato',categoria:PLAT_CAT,estado:'proceso',tiempoMin:10,pesoGr:0,fotos:[],receta:'',conservacion:'',componentes:[]});renderAll();window.scrollTo(0,0);}
 function delPlato(id){if(confirm('¿Eliminar este plato?')){DB.platos=DB.platos.filter(x=>x.id!==id);renderAll();}}
 function addPrep(){DB.preps.unshift({id:uid(),nombre:'Nueva preparación',tipo:'intermedia',rendCant:100,rendUnidad:'gr',componentes:[]});renderAll();window.scrollTo(0,0);}
 function delPrep(id){if(confirm('¿Eliminar esta preparación? Revisá que no esté usada en platos.')){DB.preps=DB.preps.filter(x=>x.id!==id);renderAll();}}
